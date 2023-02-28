@@ -1,25 +1,26 @@
 from aiogram import types
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 from database import AsyncSubscribitions
 from config import ADMIN_IDS
 from handlers.subscribed import check_subscriptions, unsubscribed
 
 
-db = AsyncSubscribitions()
+spons_db = AsyncSubscribitions()
 
 
 async def send_welcome(message: types.Message) -> None:
     user_id = message.from_id
     if not (user_id in ADMIN_IDS):
-        subscribed = True
-        if not all(
-            (
-                await db.is_subscribed_to_all(user_id),
-                await check_subscriptions(message),
+        subscribed = (
+            True
+            if all(
+                (
+                    await spons_db.is_subscribed_to_all(user_id),
+                    await check_subscriptions(user_id),
+                )
             )
-        ):
-            subscribed = False
+            else False
+        )
 
         if not subscribed:
             await unsubscribed(message)
@@ -30,6 +31,11 @@ async def send_welcome(message: types.Message) -> None:
         )
         return
 
-    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-    keyboard.add(KeyboardButton("➕ New Film"))
-    await message.answer("Welcome! Choose an option:", reply_markup=keyboard)
+    await message.answer(
+        "Welcome! Here are admin commands:\n\n"
+        "*/add_film* - _add new film to bot's database_\n"
+        "*/add_sponsor* - _add new sponsor to bot's database_\n"
+        "*/get_sponsors* - _get list of all sponsors_\n"
+        "*/remove_sponsor* - _remove a certain sponsor from bot's database_",
+        parse_mode="Markdown",
+    )

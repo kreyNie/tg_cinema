@@ -36,12 +36,23 @@ dp.register_message_handler(
     lambda message: message.from_id in ADMIN_IDS,
     AsyncSponsor.add_sponsor,
     regexp=r"@(\w+)",
-    state=AddingState.sponsor,
+    state=AddingState.add_sponsor,
 )
 dp.register_message_handler(
     lambda message: message.from_id in ADMIN_IDS,
     AsyncSponsor.get_sponsors,
     commands=["get_sponsors"],
+)
+dp.register_message_handler(
+    lambda message: message.from_id in ADMIN_IDS,
+    AsyncSponsor.remove_state,
+    commands=["remove_sponsor"],
+)
+dp.register_message_handler(
+    lambda message: message.from_id in ADMIN_IDS,
+    AsyncSponsor.remove_sponsor,
+    regexp=r"@(\w+)",
+    state=AddingState.remove_sponsor,
 )
 dp.register_message_handler(
     lambda message: cancel_handler(message, dp.current_state()),

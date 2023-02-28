@@ -90,14 +90,44 @@ class AsyncSponsor:
             "⚠️ NOTE ⚠️\n"
             "Bot should be an admin in your sponsor's channel to check if user is in the channel"
         )
-        await AddingState.sponsor.set()
+        await AddingState.add_sponsor.set()
 
     @staticmethod
     async def add_sponsor(message: types.Message) -> None:
-        await sponsor_db.add_sponsor(message.text)
-        await message.answer(f'Channel "{message.text}" has been added')
+        sponsor_name = message.text
+        if await sponsor_db.is_in(sponsor_name):
+            await message.answer(f"{sponsor_name} is already in database!")
+            return
+
+        await sponsor_db.add_sponsor(sponsor_name)
+        await message.answer(
+            f'Channel "{sponsor_name}" has been *added*', parse_mode="Markdown"
+        )
 
     @staticmethod
     async def get_sponsors(message: types.Message) -> None:
         sponsor_list = await sponsor_db.get_sponsors()
         await message.answer("Current sponsor list:\n" + "\n".join(sponsor_list))
+
+    @staticmethod
+    async def remove_state(message: types.Message) -> None:
+        await message.answer('Type "q" for quit adding')
+        await message.answer(
+            "⚠️ NOTE ⚠️\n"
+            "After updating (adding or removing) sponsors all users "
+            "will be automatically set to unsubscribed state\n\n"
+            'You should write sponsors like "@your_sponsor_channel" (without quotes)'
+        )
+        await AddingState.remove_sponsor.set()
+
+    @staticmethod
+    async def remove_sponsor(message: types.Message) -> None:
+        sponsor_name = message.text
+        if not await sponsor_db.is_in(sponsor_name):
+            await message.answer(f"There is no {sponsor_name} in sponsor list!")
+            return
+
+        await sponsor_db.remove_sponsor(message.text)
+        await message.answer(
+            f'Channel "{message.text}" has been *removed*', parse_mode="Markdown"
+        )

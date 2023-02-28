@@ -23,7 +23,7 @@ async def check_subs_handler(callback_query: types.CallbackQuery) -> None:
     answer = "You have not subscribed to all channels!"
     if subscribed:
         answer = "Have a great day!"
-        await db.update_subscription_status(user_id, True)
+        await db._update_subscription_status(user_id, True)
     await bot.answer_callback_query(callback_query.id, answer)
 
 

@@ -10,5 +10,5 @@ class FilmState(StatesGroup):
 
 
 class AddingState(StatesGroup):
-    film = State()
-    sponsor = State()
+    add_sponsor = State()
+    remove_sponsor = State()

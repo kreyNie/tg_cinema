@@ -4,6 +4,14 @@ import aiosqlite
 
 
 class Database:
+    """
+    Parent class for all databases
+
+    Call init.database() in class __init__ function initialize databases.
+    That function will create new tables with their columns and column
+    types if they are not exist.
+    """
+
     def __init__(self, db_file: str) -> None:
         self._db_file = db_file
 
@@ -87,7 +95,20 @@ class Database:
 
 
 class AsyncFilmDatabase(Database):
+    """Class for working with films database
+
+    :param Database: parent class
+    :type Database: Database
+    """
+
     def __init__(self, db_file: str = "films.db", name: str = "films") -> None:
+        """Create films database object
+
+        :param db_file: path to database, defaults to "films.db"
+        :type db_file: str, optional
+        :param name: table's name, defaults to "films"
+        :type name: str, optional
+        """
         super().__init__(db_file)
         self.name = name
         self.columns = {
@@ -129,6 +150,13 @@ class AsyncSubscribitions(Database):
     def __init__(
         self, db_file: str = "subscriptions.db", name: str = "subscriptions"
     ) -> None:
+        """Class for working with sponsors' channels
+
+        :param db_file: path to database file, defaults to "subscriptions.db"
+        :type db_file: str, optional
+        :param name: main table's name, defaults to "subscriptions"
+        :type name: str, optional
+        """
         super().__init__(db_file)
         self.name = name
         self.columns = {
@@ -137,13 +165,13 @@ class AsyncSubscribitions(Database):
         }
         self.channel_table = "channels"
         self.channel_columns = {
-            "channel_name": "TEXT NOT NULL PRIMARY KEY",
+            "channel_name": "TEXT NOT NULL",
         }
         self.init_database(self.name, self.columns)
         self.init_database(self.channel_table, self.channel_columns)
-        self.create_subscription_triggers()
+        self._create_subscription_triggers()
 
-    def create_subscription_triggers(self) -> None:
+    def _create_subscription_triggers(self) -> None:
         with sqlite3.connect(self._db_file) as db:
             for action in ("INSERT", "UPDATE"):
                 db.execute(
@@ -155,7 +183,7 @@ class AsyncSubscribitions(Database):
                 )
             db.commit()
 
-    async def update_subscription_status(self, user_id: int, subscribed: bool) -> None:
+    async def _update_subscription_status(self, user_id: int, subscribed: bool) -> None:
         async with aiosqlite.connect(self._db_file) as db:
             await db.execute(
                 "INSERT OR REPLACE INTO subscriptions (user_id, subscribed) VALUES (?, ?)",
@@ -164,10 +192,22 @@ class AsyncSubscribitions(Database):
             await db.commit()
 
     async def is_subscribed_to_all(self, user_id: int) -> bool:
+        """Checks if user is subscribed to all sponsors' channels in database
+
+        :param user_id: telegram user id
+        :type user_id: int
+        :return: True if subscribed otherwise False
+        :rtype: bool
+        """
         result = await self.get_item(self.name, "user_id=?", (user_id,), "subscribed")
         return not not result["subscribed"]
 
     async def get_sponsors(self) -> List[str]:
+        """Get sponsor list from database
+
+        :return: list of sponsors
+        :rtype: List[str]
+        """
         db_result = await self.get_items(self.channel_table)
         if not db_result:
             return ["There is no sponsors"]
@@ -176,10 +216,17 @@ class AsyncSubscribitions(Database):
     async def add_sponsor(self, channel_name: str) -> None:
         await self.add_values(self.channel_table, {"channel_name": channel_name})
 
-    async def edit_sponsors(self, channel_name: int, operation: bool) -> None:
-        if operation:
-            self.set(channel_name)
-        else:
-            await self.remove_values(
-                self.channel_table, "channel_name=?", (channel_name,)
-            )
+    async def remove_sponsor(self, channel_name: str) -> None:
+        await self.remove_values(self.channel_table, "channel_name=?", (channel_name,))
+
+    async def is_in(self, channel_name: str) -> bool:
+        """Check if sponsor is in database
+
+        :param channel_name: sponsor's channel name
+        :type channel_name: str
+        :return: True if channel is in database otherwise False
+        :rtype: bool
+        """
+        return not not await self.get_item(
+            self.channel_table, "channel_name=?", (channel_name,)
+        )

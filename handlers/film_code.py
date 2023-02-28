@@ -31,7 +31,7 @@ async def find_film_code(message: types.Message) -> None:
     if film:
         await message.reply(
             f"Here is the information for the film with code {code}:\n\n"
-            f"🎞️ Title: {film['title']}\n"
+            f"🎞️ Title: {film['title']} ({film['year']})\n"
             f"🎬 Director: {film['director']}\n"
             f"📃 Description:\n{film['description']}"
         )
