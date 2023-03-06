@@ -1,5 +1,6 @@
-from typing import Any, Dict, List
 import sqlite3
+from typing import Any, Dict, List
+
 import aiosqlite
 
 
@@ -61,7 +62,7 @@ class Database:
         condition: str = None,
         values: tuple = None,
         target: str = "*",
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, Any] | None:
         async with aiosqlite.connect(self._db_file) as db:
             query = (
                 f"SELECT {target} FROM {table_name}" + f" WHERE {condition}"
@@ -200,7 +201,10 @@ class AsyncSubscribitions(Database):
         :rtype: bool
         """
         result = await self.get_item(self.name, "user_id=?", (user_id,), "subscribed")
-        return not not result["subscribed"]
+        if not result:
+            await self._update_subscription_status(user_id, False)
+            return False
+        return not not result.get("subscribed")
 
     async def get_sponsors(self) -> List[str]:
         """Get sponsor list from database

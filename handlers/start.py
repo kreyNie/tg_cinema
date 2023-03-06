@@ -1,16 +1,15 @@
 from aiogram import types
-
-from database import AsyncSubscribitions
 from config import ADMIN_IDS
-from handlers.subscribed import check_subscriptions, unsubscribed
+from database import AsyncSubscribitions
 
+from handlers.subscribed import check_subscriptions, unsubscribed
 
 spons_db = AsyncSubscribitions()
 
 
 async def send_welcome(message: types.Message) -> None:
     user_id = message.from_id
-    if not (user_id in ADMIN_IDS):
+    if user_id not in ADMIN_IDS:
         subscribed = (
             True
             if all(
