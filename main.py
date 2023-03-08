@@ -1,17 +1,23 @@
-from aiogram import Dispatcher
-from aiogram.utils import executor
-from aiogram.dispatcher.filters import Text
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
+import logging
 
-from config import ADMIN_IDS, bot
-from handlers import start
-from handlers import film_code
-from handlers import subscribed
-from handlers.admin import FilmProcess, AsyncSponsor, cancel_handler
-from handlers.states import FilmState, AddingState
+from aiogram import Dispatcher
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher.filters import Text
+from aiogram.utils import executor
+
+from config import ADMIN_IDS, DEBUG, bot
+from handlers import film_code, start, subscribed
+from handlers.admin import AsyncSponsor, FilmProcess, cancel_handler
+from handlers.states import AddingState, FilmState
 
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
+logging.basicConfig(
+    level=logging.DEBUG if DEBUG else logging.INFO,
+    filename="app.log",
+    filemode="a",
+    format="%(asctime)s %(levelname)s %(message)s",
+)
 
 
 dp.register_message_handler(
